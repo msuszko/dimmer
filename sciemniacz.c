@@ -3,7 +3,6 @@
 #include <avr/io.h> 
 #include <util/delay.h> 
 #include <avr/interrupt.h> 
-// #include "uart.h"
 
 #define T1 PD5
 #define T2 PD4
@@ -25,20 +24,6 @@
 
 #define USART_BAUDRATE 19200
 #define UBRR_VALUE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
-
-ISR(TIMER0_OVF_vect)
-{
-	PORTD = PORTD ^ (1 << T1);
-}
-
-int read_temp(void)
-{
-	uint8_t temperature;
-
-	ADCSRA |= (1 << ADSC);    // Start the ADC conversion
-	temperature = ADCH;
-	return temperature;
-}
 
 void init(void)
 {
@@ -70,10 +55,31 @@ void init(void)
 	ADMUX |= (1 << REFS0)&~(1 << REFS1); //Avcc(+5v) as voltage reference
 
 	/* timer */
-	TIMSK=0x01;
-	TCCR0=0x05;
+	TCCR1B |= (1 << WGM12); // CTC mode
+	TCCR1B |= ((1 << CS10) | (1 << CS11)); // prescaler to Fcpu/64
+	OCR1A = 15625; // Ustawia wartość pożądaną na 1Hz dla preskalera 64
+	TIMSK |= (1 << OCIE1A); // allow CTC interrupt
 
 	sei();
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+	PORTD = PORTD ^ (1 << T1);
+}
+
+ISR(INT1_vect )
+{
+	PORTD = PORTD ^ (1 << T1);
+} 
+
+int read_temp(void)
+{
+	uint8_t temperature;
+
+	ADCSRA |= (1 << ADSC);    // Start the ADC conversion
+	temperature = ADCH;
+	return temperature;
 }
 
 int main(void) 
