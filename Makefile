@@ -1,14 +1,14 @@
 TARGET=sciemniacz
 
 CC=avr-gcc
-PORT=/dev/cuaU0
+# PORT=/dev/cuaU0
+PORT=avrdoper
 PROGRAMMER=stk500v2
 
 MCU=atmega8
 INC=
 
-CFLAGS=-mmcu=$(MCU) -Wall -I. $(INC) -O1
-CFLAGS+= -mint8
+CFLAGS=-mmcu=$(MCU) -Wall -I. $(INC) -Os
 
 
 .SUFFIXES: .elf .bin .c .o
@@ -30,7 +30,7 @@ flash: $(TARGET).bin
 	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U flash:w:$(TARGET).bin:r
 
 fuse:
-	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U lfuse:w:0x3f:m -U hfuse:w:0xc9:m 
+	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U lfuse:w:0xff:m -U hfuse:w:0xc9:m 
 
 clean:
 	rm -f *.elf *.o *.bin *.map
