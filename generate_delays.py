@@ -19,6 +19,9 @@ def delay(step):
 
 
 def main():
+    if (period_tick - delay(1)) < 0:
+        print('WARNING: last power level starts %dus after '
+              'zero-crossing interrupt!' % ((delay(1) - period_tick)/tick))
     print('unsigned int delays[] = {')
     values = ', '.join("%d" % round(delay(p+1)) for p in range(steps))
     for line in wrap(values, 74):
