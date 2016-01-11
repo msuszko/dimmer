@@ -9,16 +9,21 @@ MCU=atmega8
 INC=
 
 CFLAGS=-mmcu=$(MCU) -Wall -I. $(INC) -Os
+CFLAGS+= -flto
+# CFLAGS+= -ffunction-sections
+
+LFDLAGS=-flto
+# LFDLAGS+= -Wl,-gc-sections
 
 
 .SUFFIXES: .elf .bin .c .o
-OBJS= $(TARGET).o
+OBJS= $(TARGET).o power.o
 
 .c.o:
 	$(CC) $(CFLAGS) -c ${.IMPSRC} -o ${.TARGET}
 
 $(TARGET).elf: $(OBJS)
-	$(CC) $(CFLAGS) -Wl,-Map,$(TARGET).map -o ${.TARGET} ${.ALLSRC}
+	$(CC) $(LDFLAGS) -Wl,-gc-sections -Wl,-Map,$(TARGET).map -o ${.TARGET} ${.ALLSRC}
 
 $(TARGET).bin: $(TARGET).elf
 	avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}

@@ -26,15 +26,10 @@
 #define BAUD 9600
 #include <util/setbaud.h>
 
-#define PIN_NUM 13
+#include "power.h"
 
 uint8_t command;
 uint8_t device_id __attribute__((section(".eeprom")));
-
-uint8_t stop_ptr;
-uint16_t stops[PIN_NUM];
-uint8_t pin_stop[PIN_NUM];
-uint8_t stops_pins[PIN_NUM][PIN_NUM];
 
 #define BUFF_SIZE 32
 char usart_buff[BUFF_SIZE];
@@ -65,8 +60,7 @@ void init(void)
 
 	// timer
 	//TCCR1B |= _BV(WGM12); // CTC mode
-	//TCCR1B |= (_BV(CS10) | _BV(CS11)); // prescaler to Fcpu/64
-	TCCR1B = 0x04; //start timer with prescaler Fcpu/256
+	TCCR1B |= _BV(CS11); // prescaler to Fcpu/8
 	OCR1A = 15625; // Ustawia wartość pożądaną na 1Hz dla preskalera 64
 	TIMSK |= _BV(OCIE1A); // allow CTC interrupt
 
@@ -88,13 +82,16 @@ void init(void)
 
 ISR(TIMER1_COMPA_vect)
 {
-	PORTD = PORTD ^ _BV(T1);
+	//PORTD = PORTD ^ _BV(T1);
+	timer_alarm();
 }
 
 ISR(INT1_vect)
 {
-	TCCR1B = 0x04; //start timer with prescaler Fcpu/256
-	TCNT1 = 0;   //reset timer - count from zero
+	zero_cross();
+	// TCNT1 = 0;   //reset timer - count from zero
+	// TCCR1B |= _BV(CS11); // prescaler to Fcpu/8
+
 } 
 
 // przerwanie generowane po odebraniu bajtu  
@@ -109,7 +106,7 @@ ISR(USART_RXC_vect)
 			send_byte(1);
 		break;
 		default:
-			send_byte(byte);
+			//send_byte(byte);
 		break;
 	}
 }  
@@ -127,16 +124,6 @@ ISR(USART_UDRE_vect){
 		UCSRB &= ~_BV(UDRIE); //wyłącz przerwania pustego bufora nadawania
 	}
 }  
-
-void set_power(uint8_t pin, uint8_t level)
-{
-	uint8_t stop;
-
-	if (pin_stop[pin] != 0) {
-		stop = pin_stop[pin];
-	}
-	
-}
 
 int send_byte(uint8_t byte)
 {
@@ -164,6 +151,7 @@ int main(void)
 {
     int i=0;
 
+	power_init();
     init();    
     send_byte('X');
 	for (;;) {
