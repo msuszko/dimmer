@@ -1,41 +1,16 @@
-#define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <util/delay.h> 
 #include <avr/eeprom.h>
 #include <avr/interrupt.h> 
 
-#define T1 PD5
-#define T2 PD4
-#define T3 PD6
-#define T4 PD7
-#define T5 PB1
-#define T6 PB0
-#define T7 -1
-#define T8 PB2
-#define T9 PC1
-#define T10 PC0
-#define T11 PC2
-#define T12 PC3
-#define T13 PC4
-#define T14 PC5
-#define ZERODET PD3
-#define RSSEND PD2
-#define TEMP ADC7
-
-#define BAUD 9600
-#include <util/setbaud.h>
-
+#include "pins.h"
+#include "serial.h"
 #include "power.h"
 
 uint8_t command;
 uint8_t device_id __attribute__((section(".eeprom")));
 
-#define BUFF_SIZE 32
-char usart_buff[BUFF_SIZE];
-volatile unsigned int usart_buff_in = 0, usart_buff_out = 0;
-
-int send_byte(uint8_t byte);
 
 void init(void)
 {
@@ -100,43 +75,13 @@ ISR(USART_RXC_vect)
 	uint8_t u8Data;
 
 	u8Data = UDR;
-	switch (u8Data)
-	{
-		case 'v':
-			send_byte(1);
-		break;
-		default:
-			//send_byte(byte);
-		break;
-	}
+	receive_byte(u8Data);
 }  
 
 // przerwanie generowane, gdy bufor nadawania jest już pusty,   
 ISR(USART_UDRE_vect){  
-  
-  	UDR = 'X';
-  	PORTD |= _BV(RSSEND); // enable RS485
-  	if (usart_buff_in != usart_buff_out) {
-  		UDR = usart_buff[usart_buff_out];
-  		usart_buff_out = (usart_buff_out + 1) % BUFF_SIZE;
-	} else {
-		PORTD &= ~_BV(RSSEND); // disable RS485
-		UCSRB &= ~_BV(UDRIE); //wyłącz przerwania pustego bufora nadawania
-	}
+	on_buffer_empty();
 }  
-
-int send_byte(uint8_t byte)
-{
-    // add byte to the queue
-	if (usart_buff_in == ((usart_buff_out - 1 + BUFF_SIZE) % BUFF_SIZE)) {
-		return -1;
-	} else {
-		usart_buff[usart_buff_in] = byte;
-		usart_buff_in = (usart_buff_in + 1) % BUFF_SIZE;
-	}
-	UCSRB |= _BV(UDRIE);
-	return 0;
-}
 
 int read_temp(void)
 {

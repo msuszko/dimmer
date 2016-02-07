@@ -1,4 +1,4 @@
-TARGET=sciemniacz
+TARGET=dimmer
 
 CC=avr-gcc
 # PORT=/dev/cuaU0
@@ -10,14 +10,15 @@ INC=
 
 CFLAGS=-mmcu=$(MCU) -Wall -I. $(INC) -Os
 CFLAGS+= -flto
+CFLAGS+= -DF_CPU=16000000UL
 # CFLAGS+= -ffunction-sections
 
 LFDLAGS=-flto
 # LFDLAGS+= -Wl,-gc-sections
 
 
-.SUFFIXES: .elf .bin .c .o
-OBJS= $(TARGET).o power.o
+.SUFFIXES: .elf .bin .c .h .o
+OBJS= $(TARGET).o power.o serial.o
 
 .c.o:
 	$(CC) $(CFLAGS) -c ${.IMPSRC} -o ${.TARGET}

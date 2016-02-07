@@ -5,7 +5,7 @@
 PIN_NUM = 13
   
 # stop_idx -> power
-stops = [0] * PIN_NUM
+stops = [[0,0] for x in range(PIN_NUM)]
 # pin_idx -> stop
 pin2stop = [0] * PIN_NUM
 # stop_idx -> pin[]
@@ -32,7 +32,10 @@ def set_power(pin, power):
                 break
         # remove stop if empty
         if zero_idx == 0:
-            stops[stop-1] = 0
+            for idx in range(PIN_NUM):
+                if stops[idx][1] == stop-1:
+                    stops[idx][1] = stops[stop-1][1]
+            stops[stop-1] = [0, -1]
         pin2stop[pin_idx] = 0
 
     if power == 0:
@@ -40,10 +43,13 @@ def set_power(pin, power):
 
     # find empty stop or stop with the same power
     for idx in range(PIN_NUM):
-        if stops[idx] == power:
-            pass
-        elif stops[idx] == 0:
-            stops[idx] = power
+        if stops[idx][0] == power:
+            stop = idx + 1
+            break
+        elif stops[idx][0] == 0:
+            stops[idx] = [power, -1]
+            stop = idx + 1
+            break
         else:
             continue
         stop = idx + 1

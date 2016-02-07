@@ -131,7 +131,7 @@ void timer_alarm(void)
 	if (off_midstop != -1) {
 		PORTB = stop2pins[off_midstop][0];
 		PORTC = stop2pins[off_midstop][1];
-		PORTD = stop2pins[off_midstop][2];
+		PORTD &= (~(pin_mask[2]) | stop2pins[off_midstop][2]);
 		off_midstop = -1;
 		OCR1A = delays[stops[next_stop].power];
 		return;
@@ -158,5 +158,5 @@ void timer_alarm(void)
 	}
 	PORTB = stop2pins[stop][0];
 	PORTC = stop2pins[stop][1];
-	PORTD = stop2pins[stop][2];
+	PORTD &= (~(pin_mask[2]) | stop2pins[stop][2]);
 }
