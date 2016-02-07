@@ -92,13 +92,48 @@ int read_temp(void)
 	return temperature;
 }
 
+void process_command(char *cmd_buff, unsigned int len)
+{
+	switch (cmd_buff[0]) {
+		case 'o':
+			if (len != 3) {
+				respond('l');
+				return;
+			}
+			set_power((int8_t)cmd_buff[1], (uint8_t)cmd_buff[2]);
+			respond('o');
+		break;
+		case 'S':
+			// TODO: set id in eeprom
+			respond('S');
+		break;
+		case 'i':
+			// TODO: read id from eeprom
+			send_byte('i');
+			send_byte(0);
+			send_byte(1);
+			send_byte('\n');
+		break;
+		case 't':
+			// TODO: read temperature
+			send_byte('t');
+			send_byte(100);
+			send_byte('\n');
+		break;
+		default:
+			respond('u');
+		break;
+	}
+}
+
 int main(void) 
 {
     int i=0;
 
 	power_init();
     init();    
-    send_byte('X');
+    send_byte('r');
+    send_byte('\n');
 	for (;;) {
 		i+=1;
    	} 
