@@ -11,18 +11,19 @@ volatile unsigned int in_buff_in = 0;
 void on_buffer_empty(void)
 {
   	UDR = 'X';
-  	PORTD |= _BV(RSSEND); // enable RS485
+  	PORTD |= _BV(RSSEND); /* enable RS485 */
   	if (out_buff_in != out_buff_out) {
   		UDR = out_buff[out_buff_out];
   		out_buff_out = (out_buff_out + 1) % OUT_BUFF_SIZE;
 	} else {
-		PORTD &= ~_BV(RSSEND); // disable RS485
-		UCSRB &= ~_BV(UDRIE); //wyłącz przerwania pustego bufora nadawania
+		PORTD &= ~_BV(RSSEND); /* disable RS485 */
+		UCSRB &= ~_BV(UDRIE); /* wyłącz przerwania pustego bufora nadawania */
 	}
 }
 
 void receive_byte(uint8_t byte)
 {
+        send_byte(byte);
 	if (byte == 10 && byte == 13) {
 		if (in_buff_in > IN_BUFF_SIZE) {
 			send_byte('E');
@@ -42,7 +43,7 @@ void receive_byte(uint8_t byte)
 
 int send_byte(uint8_t byte)
 {
-    // add byte to the queue
+    /* add byte to the queue */
 	if (out_buff_in == ((out_buff_out - 1 + OUT_BUFF_SIZE) % OUT_BUFF_SIZE)) {
 		return -1;
 	} else {

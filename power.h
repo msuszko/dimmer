@@ -1,9 +1,6 @@
 
 #define PIN_NUM 13
 
-// #define int8_t char
-// #define uint8_t unsigned char
-
 typedef struct
 {
 	uint8_t power;
