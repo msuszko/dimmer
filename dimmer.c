@@ -94,48 +94,59 @@ int read_temp(void)
 
 void process_command(char *cmd_buff, unsigned int len)
 {
+	int8_t res;
+
 	switch (cmd_buff[0]) {
 		case 'o':
 			if (len != 3) {
-				respond('l');
-				return;
+				send_byte('l');
+			} else {
+				res = set_power((int8_t)cmd_buff[1]-48, (uint8_t)cmd_buff[2]);
+				if (res == 0) {
+					send_byte('o');
+				} else {
+					send_byte('P');
+				}
 			}
-			set_power((int8_t)cmd_buff[1], (uint8_t)cmd_buff[2]);
-			respond('o');
 		break;
 		case 'S':
 			/* TODO: set id in eeprom */
-			respond('S');
+			send_byte('S');
 		break;
 		case 'i':
 			/* TODO: read id from eeprom */
 			send_byte('i');
 			send_byte(0);
 			send_byte(1);
-			send_byte('\n');
 		break;
 		case 't':
 			/* TODO: read temperature */
 			send_byte('t');
 			send_byte(100);
-			send_byte('\n');
 		break;
 		default:
 			respond('u');
 		break;
 	}
+	send_byte('\r');
+	send_byte('\n');
 }
 
 int main(void) 
 {
-    int i=0;
 
 	power_init();
     init();    
-    send_byte('r');
+	set_power(1, 40);
+    send_byte('R');
+    send_byte('\r');
     send_byte('\n');
-	for (;;) {
-		i+=1;
-   	} 
+	while(1)
+	{
+		zero_cross();
+		_delay_ms(5);
+		PORTD |= _BV(PD5);
+		_delay_ms(5);
+	}
 	return 0;
 }

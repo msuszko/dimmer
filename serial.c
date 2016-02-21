@@ -10,7 +10,6 @@ volatile unsigned int in_buff_in = 0;
   
 void on_buffer_empty(void)
 {
-  	UDR = 'X';
   	PORTD |= _BV(RSSEND); /* enable RS485 */
   	if (out_buff_in != out_buff_out) {
   		UDR = out_buff[out_buff_out];
@@ -23,22 +22,33 @@ void on_buffer_empty(void)
 
 void receive_byte(uint8_t byte)
 {
-        send_byte(byte);
-	if (byte == 10 && byte == 13) {
+	if (byte == '\n' || byte == '\r') {
+		send_byte('!');
 		if (in_buff_in > IN_BUFF_SIZE) {
 			send_byte('E');
-			send_byte('\n');
+		} else if (in_buff_in == 0) {
+			send_byte('_');
 		} else {
 			process_command(in_buff, in_buff_in);
+			send_byte('p');
 		}
 		in_buff_in = 0;
+		send_byte('\r');
+		send_byte('\n');
+		return;
+	} 
+	send_byte('<');
+	send_byte(byte);
+	send_byte('>');
+	if (in_buff_in > IN_BUFF_SIZE) {
+		send_byte('$');
 		return;
 	}
-	if (in_buff_in > IN_BUFF_SIZE)
-		return;
 
 	in_buff[in_buff_in] = byte;
 	in_buff_in++;
+	send_byte('\r');
+	send_byte('\n');
 }
 
 int send_byte(uint8_t byte)

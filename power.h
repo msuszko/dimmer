@@ -10,7 +10,7 @@ typedef struct
 
 void power_init(void);
 
-void set_power(int8_t pin, uint8_t power);
+int8_t set_power(int8_t pin, uint8_t power);
 
 void zero_cross(void);
 

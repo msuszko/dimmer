@@ -2,6 +2,7 @@
 #include <avr/io.h>
 #include "power.h"
 #include "phase_control.h"
+#include "serial.h" /* XXX */
 
 int8_t first_stop = -1;
 int8_t next_stop = -1;
@@ -61,11 +62,14 @@ void power_init(void)
 }
 
 
-void set_power(int8_t pin, uint8_t power)
+int8_t set_power(int8_t pin, uint8_t power)
 {
 	int8_t zero_idx, idx, stop = 0;
 	uint8_t lesser_power = 0;
 
+	if (pin < 0 || pin > PIN_NUM) {
+		return -1;
+	}
 	if (pin2stop[pin] != -1) {
 		/* remove pin from stop data */
 		stop = pin2stop[pin];
@@ -88,8 +92,10 @@ void set_power(int8_t pin, uint8_t power)
 		pin2stop[pin] = -1;
 	}
 
+	send_byte('@');
 	/* find empty stop or stop with the same power */
 	for (idx=0; idx<PIN_NUM; idx++) {
+		send_byte(idx+65);
 		if (stops[idx].power == power) {
 			stop = idx;
 			break;
@@ -106,13 +112,19 @@ void set_power(int8_t pin, uint8_t power)
 			zero_idx = idx;
 		}
 	}
+	if (first_stop == -1) {
+		first_stop = idx;
+	}
 	pin2stop[pin] = stop;
 
 	set_pin(stop2pins[stop], pin);
+	send_byte(first_stop+48);
+	return 0;
 }
 
 void zero_cross(void)
 {
+	PORTD &= ~_BV(PD5);
 	TCNT1 = 0; /* reset timer - count from zero */
 	if (first_stop == -1) {
 		TIMSK = 0;
@@ -131,7 +143,7 @@ void timer_alarm(void)
 	if (off_midstop != -1) {
 		PORTB = stop2pins[off_midstop][0];
 		PORTC = stop2pins[off_midstop][1];
-		PORTD &= (~(pin_mask[2]) | stop2pins[off_midstop][2]);
+		PORTD = (PORTD & ~(pin_mask[2])) | stop2pins[off_midstop][2];
 		off_midstop = -1;
 		OCR1A = delays[stops[next_stop].power];
 		return;
@@ -140,9 +152,9 @@ void timer_alarm(void)
 	if (stops[next_stop].next == -1) {
 		/* this is last stop; zero all pins and disable timer */
 		TIMSK = 0;
-		PORTB &= pin_mask[0];
-		PORTC &= pin_mask[1];
-		PORTD &= pin_mask[2];
+		PORTB = 0;
+		PORTC = 0;
+		PORTD &= ~(pin_mask[2]);
 		next_stop = first_stop;
 		return;
 	}
@@ -158,5 +170,5 @@ void timer_alarm(void)
 	}
 	PORTB = stop2pins[stop][0];
 	PORTC = stop2pins[stop][1];
-	PORTD &= (~(pin_mask[2]) | stop2pins[stop][2]);
+	PORTD = (PORTD & ~(pin_mask[2])) | stop2pins[stop][2];
 }
