@@ -1,7 +1,6 @@
 TARGET=dimmer
 
 CC=avr-gcc
-SIZE=avr-size
 
 # PORT=/dev/cuaU0
 PORT=avrdoper
@@ -10,27 +9,27 @@ PROGRAMMER=stk500v2
 MCU=atmega8
 INC=
 
-CFLAGS=-g -mmcu=$(MCU) -Wall -I. $(INC)
-CFLAGS+= -pedantic-errors -Werror -mcall-prologues
-CFLAGS+= -flto
+CFLAGS=-g -mmcu=$(MCU) -I. $(INC)
+CFLAGS+= -pedantic-errors -Werror -Wall
+CFLAGS+= -flto -mrelax
 CFLAGS+= -DF_CPU=16000000UL
 
 
 # opt
-CFLAGS += -Os
-#CFLAGS += -fdata-sections -ffunction-sections
-#CFLAGS += -funsigned-char
-#CFLAGS += -funsigned-bitfields
-#CFLAGS += -fpack-struct
-#CFLAGS += -fshort-enums 
-#CFLAGS += -finline-limit=3
-#CFLAGS += -fno-inline-small-functions 
+CFLAGS+= -Os
+#CFLAGS+= -fdata-sections -ffunction-sections
+#CFLAGS+= -mcall-prologues
+#CFLAGS+= -funsigned-char
+#CFLAGS+= -funsigned-bitfields
+#CFLAGS+= -fpack-struct
+#CFLAGS+= -fshort-enums 
+#CFLAGS+= -finline-limit=3
+#CFLAGS+= -fno-inline-small-functions 
 # end opt
 
-LDFLAGS =-g -lc -mmcu=$(MCU) -Wl,-Map,$(TARGET).map
-LFDLAGS=-flto
-#LDFLAGS += -Wl,--gc-sections -Wl,--print-gc-sections
-#LDFLAGS += -Wl,--relax
+LDFLAGS=-g -lc -mmcu=$(MCU) -Wl,-Map,$(TARGET).map
+LFDLAGS+= -flto -Wl,--relax
+LDFLAGS+= -Wl,--gc-sections -Wl,--print-gc-sections
 
 
 .SUFFIXES: .elf .bin .c .h .o
@@ -42,17 +41,19 @@ OBJS= $(TARGET).o power.o serial.o
 
 $(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) -o ${.TARGET} ${.ALLSRC}
+	avr-size --format=berkeley $(TARGET).elf
+	#avr-size --format=avr --mcu=$(MCU) $(TARGET).elf
+
+$(TARGET).hex: $(TARGET).elf
+	avr-objcopy -j .text -j .data -O ihex ${.ALLSRC} ${.TARGET}
 
 $(TARGET).bin: $(TARGET).elf
-	avr-objcopy -O binary ${.ALLSRC} ${.TARGET}
-	$(SIZE) --format=berkeley $(TARGET).elf
-	$(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
-	#avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}
+	avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}
 
-all: $(TARGET).bin
+all: $(TARGET).hex
 
-flash: $(TARGET).bin
-	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U flash:w:$(TARGET).bin:r
+flash: $(TARGET).hex
+	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U flash:w:$(TARGET).hex:i
 
 fuse:
 	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U lfuse:w:0xff:m -U hfuse:w:0xc9:m 
