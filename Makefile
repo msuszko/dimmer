@@ -1,6 +1,8 @@
 TARGET=dimmer
 
 CC=avr-gcc
+SIZE=avr-size
+
 # PORT=/dev/cuaU0
 PORT=avrdoper
 PROGRAMMER=stk500v2
@@ -8,27 +10,44 @@ PROGRAMMER=stk500v2
 MCU=atmega8
 INC=
 
-CFLAGS=-mmcu=$(MCU) -Wall -I. $(INC) -Os
+CFLAGS=-g -mmcu=$(MCU) -Wall -I. $(INC)
+CFLAGS+= -pedantic-errors -Werror -mcall-prologues
 CFLAGS+= -flto
 CFLAGS+= -DF_CPU=16000000UL
-# CFLAGS+= -ffunction-sections
 
+
+# opt
+CFLAGS += -Os
+#CFLAGS += -fdata-sections -ffunction-sections
+#CFLAGS += -funsigned-char
+#CFLAGS += -funsigned-bitfields
+#CFLAGS += -fpack-struct
+#CFLAGS += -fshort-enums 
+#CFLAGS += -finline-limit=3
+#CFLAGS += -fno-inline-small-functions 
+# end opt
+
+LDFLAGS =-g -lc -mmcu=$(MCU) -Wl,-Map,$(TARGET).map
 LFDLAGS=-flto
-# LFDLAGS+= -Wl,-gc-sections
+#LDFLAGS += -Wl,--gc-sections -Wl,--print-gc-sections
+#LDFLAGS += -Wl,--relax
 
 
 .SUFFIXES: .elf .bin .c .h .o
+CSRC = power.c serial.c $(TARGET).c
 OBJS= $(TARGET).o power.o serial.o
 
 .c.o:
 	$(CC) $(CFLAGS) -c ${.IMPSRC} -o ${.TARGET}
 
 $(TARGET).elf: $(OBJS)
-	$(CC) $(LDFLAGS) -Wl,-gc-sections -Wl,-Map,$(TARGET).map -o ${.TARGET} ${.ALLSRC}
+	$(CC) $(LDFLAGS) -o ${.TARGET} ${.ALLSRC}
 
 $(TARGET).bin: $(TARGET).elf
-	avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}
-
+	avr-objcopy -O binary ${.ALLSRC} ${.TARGET}
+	$(SIZE) --format=berkeley $(TARGET).elf
+	$(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
+	#avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}
 
 all: $(TARGET).bin
 
