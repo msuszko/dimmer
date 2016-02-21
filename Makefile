@@ -33,13 +33,13 @@ LDFLAGS+= -Wl,--gc-sections -Wl,--print-gc-sections
 
 
 .SUFFIXES: .elf .bin .c .h .o
-CSRC = power.c serial.c $(TARGET).c
-OBJS= $(TARGET).o power.o serial.o
+src= power.c serial.c $(TARGET).c
+objs = $(src:.c=.o)
 
 .c.o:
 	$(CC) $(CFLAGS) -c ${.IMPSRC} -o ${.TARGET}
 
-$(TARGET).elf: $(OBJS)
+$(TARGET).elf: $(objs)
 	$(CC) $(LDFLAGS) -o ${.TARGET} ${.ALLSRC}
 	avr-size --format=berkeley $(TARGET).elf
 	#avr-size --format=avr --mcu=$(MCU) $(TARGET).elf
@@ -47,10 +47,8 @@ $(TARGET).elf: $(OBJS)
 $(TARGET).hex: $(TARGET).elf
 	avr-objcopy -j .text -j .data -O ihex ${.ALLSRC} ${.TARGET}
 
-$(TARGET).bin: $(TARGET).elf
+$(TARGET).bin: $(TARGET).bin
 	avr-objcopy -j .text -j .data -O binary ${.ALLSRC} ${.TARGET}
-
-all: $(TARGET).hex
 
 flash: $(TARGET).hex
 	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U flash:w:$(TARGET).hex:i
@@ -60,6 +58,11 @@ fuse:
 
 clean:
 	rm -f *.elf *.o *.bin *.map
+
+test_bin: power.c test.c power.h test_compat.h
+	cc -DNO_AVR_TEST -o test_bin test.c
+
+all: $(TARGET).bin
 
 
 .PHONY: clean fuse

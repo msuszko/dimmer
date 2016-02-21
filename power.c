@@ -1,8 +1,12 @@
 
+#ifdef NO_AVR_TEST
+#include "test_compat.h"
+#else
 #include <avr/io.h>
+#endif
+
 #include "power.h"
 #include "phase_control.h"
-#include "serial.h" /* XXX */
 
 int8_t first_stop = -1;
 int8_t next_stop = -1;
@@ -92,10 +96,8 @@ int8_t set_power(int8_t pin, uint8_t power)
 		pin2stop[pin] = -1;
 	}
 
-	send_byte('@');
 	/* find empty stop or stop with the same power */
 	for (idx=0; idx<PIN_NUM; idx++) {
-		send_byte(idx+65);
 		if (stops[idx].power == power) {
 			stop = idx;
 			break;
@@ -118,7 +120,6 @@ int8_t set_power(int8_t pin, uint8_t power)
 	pin2stop[pin] = stop;
 
 	set_pin(stop2pins[stop], pin);
-	send_byte(first_stop+48);
 	return 0;
 }
 
