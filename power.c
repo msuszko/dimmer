@@ -40,14 +40,14 @@ struct
 };
 
 
-void set_pin(uint8_t *reg, int8_t pin)
+void set_pin(uint8_t reg[], int8_t pin)
 {
-	*(reg + ports[pin].port_no) &= ~(_BV(ports[pin].mask));
+	reg[ports[pin].port_no] |= _BV(ports[pin].mask);
 }
 
-void unset_pin(uint8_t *reg, int8_t pin)
+void unset_pin(uint8_t reg[], int8_t pin)
 {
-	*(reg + ports[pin].port_no) |= _BV(ports[pin].mask);
+	reg[ports[pin].port_no] &= ~_BV(ports[pin].mask);
 }
 
 void power_init(void)
@@ -125,13 +125,12 @@ int8_t set_power(int8_t pin, uint8_t power)
 
 void zero_cross(void)
 {
-	PORTD &= ~_BV(PD5);
 	TCNT1 = 0; /* reset timer - count from zero */
 	if (first_stop == -1) {
 		TIMSK = 0;
 		return;
 	}
-	next_stop = stops[first_stop].next;
+	next_stop = first_stop;
 	OCR1A = delays[stops[first_stop].power];
 	TIMSK |= _BV(OCIE1A); /* allow CTC interrupt */
 }
@@ -142,30 +141,30 @@ void timer_alarm(void)
 
 	/* execute off midstop */
 	if (off_midstop != -1) {
-		PORTB = stop2pins[off_midstop][0];
-		PORTC = stop2pins[off_midstop][1];
-		PORTD = (PORTD & ~(pin_mask[2])) | stop2pins[off_midstop][2];
+		if (next_stop == -1) {
+			/* this is last stop; zero all pins and disable timer */
+			TIMSK = 0;
+			PORTB = 0;
+			PORTC = 0;
+			PORTD &= ~(pin_mask[2]);
+			next_stop = first_stop;
+		} else {
+			PORTB = stop2pins[off_midstop][0];
+			PORTC = stop2pins[off_midstop][1];
+			PORTD = (PORTD & ~(pin_mask[2])) | stop2pins[off_midstop][2];
+			OCR1A = delays[stops[next_stop].power];
+		}
 		off_midstop = -1;
-		OCR1A = delays[stops[next_stop].power];
 		return;
 	}
 
-	if (stops[next_stop].next == -1) {
-		/* this is last stop; zero all pins and disable timer */
-		TIMSK = 0;
-		PORTB = 0;
-		PORTC = 0;
-		PORTD &= ~(pin_mask[2]);
-		next_stop = first_stop;
-		return;
-	}
 	/* set the next stop */
 	stop = next_stop;
 	next_stop = stops[stop].next;
 	/* set timer comparator to fire interrupt on next stop */
-	if ((stops[stop].power + 2) > stops[next_stop].power) {
+	if ((next_stop == -1) || ((stops[stop].power-2) < stops[next_stop].power)) {
 		off_midstop = stop;
-		OCR1A = delays[stops[stop].power+1];
+		OCR1A = delays[stops[stop].power-1];
 	} else {
 		OCR1A = delays[stops[next_stop].power];
 	}
