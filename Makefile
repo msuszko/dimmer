@@ -60,7 +60,10 @@ clean:
 	rm -f *.elf *.o *.bin *.map *.hex test_bin
 
 test_bin: power.c test.c power.h test_compat.h phase_control.h
-	cc -DNO_AVR_TEST -o test_bin test.c
+	cc -g -O0 -DNO_AVR_TEST -o test_bin test.c
+
+test: test_bin
+	./test_bin
 
 phase_control.h: generate_delays.py
 	python generate_delays.py > phase_control.h

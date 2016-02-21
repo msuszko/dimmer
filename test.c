@@ -21,11 +21,14 @@ const char *byte_to_binary(int x)
 
 int main(void) {
 	power_init();
-	printf("first_stop: %hhd\n", first_stop);
+	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
 	set_power(1, 128);
-	set_power(2, 18);
-	printf("first_stop: %hhd\n", first_stop);
+	printf("set_power(1, 128)\n");
+	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
+	printf("stop2pins[next_stop][2]: %s\n", byte_to_binary(stop2pins[next_stop][2]));
 	zero_cross();
+	printf("zero_cross()\n");
+	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
 	
 	printf("timer alarm at: %hd\n", OCR1A);
 	timer_alarm();
