@@ -36,7 +36,7 @@ LDFLAGS+= -Wl,--gc-sections -Wl,--print-gc-sections
 src= power.c serial.c $(TARGET).c
 objs = $(src:.c=.o)
 
-.c.o:
+.c.o: phase_control.h power.h serial.h
 	$(CC) $(CFLAGS) -c ${.IMPSRC} -o ${.TARGET}
 
 $(TARGET).elf: $(objs)
@@ -57,10 +57,13 @@ fuse:
 	avrdude -p $(MCU) -P $(PORT) -c $(PROGRAMMER) -U lfuse:w:0xff:m -U hfuse:w:0xc9:m 
 
 clean:
-	rm -f *.elf *.o *.bin *.map
+	rm -f *.elf *.o *.bin *.map *.hex test_bin
 
-test_bin: power.c test.c power.h test_compat.h
+test_bin: power.c test.c power.h test_compat.h phase_control.h
 	cc -DNO_AVR_TEST -o test_bin test.c
+
+phase_control.h: generate_delays.py
+	python generate_delays.py > phase_control.h
 
 all: $(TARGET).bin
 
