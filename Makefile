@@ -1,6 +1,7 @@
 TARGET=dimmer
 
 CC=avr-gcc
+PYTHON=python3.5
 
 # PORT=/dev/cuaU0
 PORT=avrdoper
@@ -65,10 +66,15 @@ test_bin: power.c test.c power.h test_compat.h phase_control.h
 test: test_bin
 	./test_bin
 
+pytest: power.c power.h test_compat.h generate_delays.py pytest/dimmer_module.c
+	cd pytest && $(PYTHON) setup.py build_ext --inplace
+	$(PYTHON) run_test.py
+
+
 phase_control.h: generate_delays.py
-	python generate_delays.py > phase_control.h
+	$(PYTHON) generate_delays.py > phase_control.h
 
 all: $(TARGET).bin
 
 
-.PHONY: clean fuse
+.PHONY: clean fuse pytest
