@@ -42,12 +42,12 @@ struct
 
 void set_pin(uint8_t reg[], int8_t pin)
 {
-	reg[ports[pin].port_no] |= _BV(ports[pin].mask);
+	reg[ports[pin].port_no] |= ports[pin].mask;
 }
 
 void unset_pin(uint8_t reg[], int8_t pin)
 {
-	reg[ports[pin].port_no] &= ~_BV(ports[pin].mask);
+	reg[ports[pin].port_no] &= ~ports[pin].mask;
 }
 
 void power_init(void)
