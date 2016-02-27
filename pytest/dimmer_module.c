@@ -142,10 +142,10 @@ pyt_timer_alarm(PyObject *self)
 static PyObject *
 pyt_get_globals(PyObject *self)
 {
-	PyObject *ret = Py_BuildValue("hhhhbbb",
+	PyObject *ret = Py_BuildValue("hhhhBBB",
 			(short int)OCR1A, (short int)first_stop,
 		    (short int)next_stop, (short int)off_midstop,
-		    (char)PORTB, (char)PORTC, (char)PORTC);
+		    PORTB, PORTC, PORTD);
     return ret;
 }
 

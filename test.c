@@ -22,7 +22,9 @@ const char *byte_to_binary(int x)
 int main(void) {
 	power_init();
 	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
+	set_power(3, 17);
 	set_power(1, 128);
+	set_power(2, 127);
 	printf("set_power(1, 128)\n");
 	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
 	printf("stop2pins[next_stop][2]: %s\n", byte_to_binary(stop2pins[next_stop][2]));

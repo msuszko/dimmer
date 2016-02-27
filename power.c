@@ -54,6 +54,9 @@ void power_init(void)
 {
 	int8_t idx;
 
+	first_stop = -1;
+	next_stop = -1;
+	off_midstop = -1;
 	for (idx=0; idx<PIN_NUM; idx++) {
 		stops[idx].power = 0;
 		stops[idx].next = -1;
@@ -68,8 +71,7 @@ void power_init(void)
 
 int8_t set_power(int8_t pin, uint8_t power)
 {
-	int8_t zero_idx, idx, stop = 0;
-	uint8_t lesser_power = 0;
+	int8_t prev = -1, idx, stop = -1;
 
 	if (pin < 0 || pin > PIN_NUM) {
 		return -1;
@@ -96,26 +98,24 @@ int8_t set_power(int8_t pin, uint8_t power)
 		pin2stop[pin] = -1;
 	}
 
-	/* find empty stop or stop with the same power */
-	for (idx=0; idx<PIN_NUM; idx++) {
-		if (stops[idx].power == power) {
-			stop = idx;
-			break;
-		} else if (stops[idx].power == 0) {
-			stops[idx].power = power;
-			stop = idx;
-			if (lesser_power > 0) {
-				stops[idx].next = stops[zero_idx].next;
-				stops[zero_idx].next = stop;
+	idx = first_stop;
+	for (;;) {
+		if (idx == -1 || stops[idx].power < power) {
+			for (stop=0;stops[stop].power != 0 && stop < PIN_NUM;stop++);
+			stops[stop].power = power;
+			stops[stop].next = idx;
+			if (prev == -1) {
+				first_stop = stop;
+			} else {
+				stops[prev].next = stop;
 			}
 			break;
-		} else if (stops[idx].power < power && stops[idx].power > lesser_power) {
-			lesser_power = stops[idx].power;
-			zero_idx = idx;
+		} else if (stops[idx].power == power) {
+			stop = idx;
+			break;
 		}
-	}
-	if (first_stop == -1) {
-		first_stop = idx;
+		prev = idx;
+		idx = stops[idx].next;
 	}
 	pin2stop[pin] = stop;
 
