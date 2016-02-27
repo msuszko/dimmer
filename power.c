@@ -97,6 +97,9 @@ int8_t set_power(int8_t pin, uint8_t power)
 		}
 		pin2stop[pin] = -1;
 	}
+	if (power == 0) {
+		return 0;
+	}
 
 	idx = first_stop;
 	for (;;) {
