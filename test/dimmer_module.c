@@ -19,7 +19,7 @@ static char pyt_zero_cross_docstring[] =
 static char pyt_timer_alarm_docstring[] =
     "Simulate timer overflow interrupt.";
 static char pyt_get_globals_docstring[] =
-    "returns (OCR1A, first_stop, next_stop, off_midstop)";
+    "returns (OCR1A, first_stop, next_stop, off_midstop, PORTB, PORTC, PORTD)";
 static char pyt_get_pin2stop_docstring[] =
     "returns (pin, ...) - pin_idx to stop_numer mapping";
 static char pyt_get_stop2pins_docstring[] =
@@ -142,9 +142,10 @@ pyt_timer_alarm(PyObject *self)
 static PyObject *
 pyt_get_globals(PyObject *self)
 {
-	PyObject *ret = Py_BuildValue("hhhh",
+	PyObject *ret = Py_BuildValue("hhhhbbb",
 			(short int)OCR1A, (short int)first_stop,
-		    (short int)next_stop, (short int)off_midstop);
+		    (short int)next_stop, (short int)off_midstop,
+		    (char)PORTB, (char)PORTC, (char)PORTC);
     return ret;
 }
 
@@ -152,7 +153,6 @@ static PyObject *
 pyt_get_pin2stop(PyObject *self)
 {
 	PyObject* t;
-	short pin;
 
 	t = PyTuple_New(PIN_NUM);
 	for (short pin=0; pin<PIN_NUM; pin++) {
@@ -237,8 +237,7 @@ pyt_get_ports(PyObject *self)
 	for (short pin=0; pin<PIN_NUM; pin++) {
 		pair_t = PyTuple_New(2);
 		PyTuple_SetItem(pair_t, 0, PyLong_FromLong((long)(ports[pin].port_no)));
-		//PyTuple_SetItem(pair_t, 1, PyLong_FromUnsignedLong((unsigned long)(ports[pin].mask)));
-		PyTuple_SetItem(pair_t, 1, PyLong_FromLong((long)(ports[pin].mask)));
+		PyTuple_SetItem(pair_t, 1, PyLong_FromUnsignedLong((unsigned long)(ports[pin].mask)));
 		PyTuple_SetItem(t, pin, pair_t);
 	}
 	return t;
