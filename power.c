@@ -145,18 +145,14 @@ void timer_alarm(void)
 	/* execute off midstop */
 	if (off_midstop != -1) {
 		if (next_stop == -1) {
-			/* this is last stop; zero all pins and disable timer */
 			TIMSK = 0;
-			PORTB = 0;
-			PORTC = 0;
-			PORTD &= ~(pin_mask[2]);
 			next_stop = first_stop;
 		} else {
-			PORTB = stop2pins[off_midstop][0];
-			PORTC = stop2pins[off_midstop][1];
-			PORTD = (PORTD & ~(pin_mask[2])) | stop2pins[off_midstop][2];
 			OCR1A = delays[stops[next_stop].power];
 		}
+		PORTB = 0;
+		PORTC = 0;
+		PORTD &= ~(pin_mask[2]);
 		off_midstop = -1;
 		return;
 	}
