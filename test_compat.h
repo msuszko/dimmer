@@ -2,12 +2,11 @@
 #define uint8_t unsigned char
 #define int8_t char
 
-unsigned short OCR1A = 0;
-uint8_t TIMSK = 0,
-		PORTB = 0,
+unsigned short TCNT1, OCR1A = 0;
+uint8_t PORTB = 0,
 		PORTC = 0,
-		TCNT1 = 0,
-		PORTD = 0;
+		PORTD = 0,
+		TIMSK = 0;
 
 #define _BV(bit) (1 << (bit))
 
