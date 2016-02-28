@@ -165,7 +165,7 @@ void timer_alarm(void)
 	stop = next_stop;
 	next_stop = stops[stop].next;
 	/* set timer comparator to fire interrupt on next stop */
-	if ((next_stop == -1) || ((stops[stop].power-2) < stops[next_stop].power)) {
+	if ((next_stop == -1) || ((stops[stop].power-2) > stops[next_stop].power)) {
 		off_midstop = stop;
 		OCR1A = delays[stops[stop].power-1];
 	} else {
