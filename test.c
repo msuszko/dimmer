@@ -22,7 +22,7 @@ const char *byte_to_binary(int x)
 int main(void) {
 	power_init();
 	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
-	set_power(3, 17);
+	set_power(0, 254);
 	set_power(1, 128);
 	set_power(2, 127);
 	printf("set_power(1, 128)\n");
@@ -32,14 +32,12 @@ int main(void) {
 	printf("zero_cross()\n");
 	printf("first_stop: %hhd, next_stop: %hhd\n", first_stop, next_stop);
 	
-	printf("timer alarm at: %hd\n", OCR1A);
-	timer_alarm();
-	printf("PORTD: %s\n", byte_to_binary(PORTD));
-
-	printf("timer alarm at: %hd\n", OCR1A);
-	timer_alarm();
-	printf("PORTD: %s\n", byte_to_binary(PORTD));
-
-	printf("plunk\n");
+	while (TCNT1 < OCR1A) {
+		TCNT1 = OCR1A + 1;
+		printf("timer alarm at: %hd, ms: %hhd, next: %hhd\n", OCR1A, off_midstop, next_stop);
+		timer_alarm();
+		printf("PORTD: %s\n", byte_to_binary(PORTD));
+	}
+	printf("FIN\n");
 	return 0;
 }
