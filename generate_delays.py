@@ -25,7 +25,7 @@ def main():
         print('WARNING: last power level starts %dus after '
               'zero-crossing interrupt!' % ((delay(1) - period_tick)/tick))
     print('unsigned int delays[] = {')
-    values = ', '.join("%d" % round(delay(p+1)) for p in range(steps))
+    values = ', '.join("%d" % round(delay(p)) for p in range(steps+1))
     for line in wrap(values, 74):
         print('\t%s' % line)
     print('};')
